@@ -59,8 +59,12 @@ type Status struct {
 }
 
 func main() {
+
+	// Get chain URL from a flag
 	chainurl := flag.String("c", "http://localhost:26657/", "help message for flag n")
 	flag.Parse()
+
+	// Configure RedisJSON
 	rh := rejson.NewReJSONHandler()
 	cli := redis.NewClient(&redis.Options{Addr: "localhost:6379"})
 
