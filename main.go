@@ -129,7 +129,7 @@ func GetBlock(block int, rh *rejson.Handler) {
 
 // GetStatus() grabs the status from a Cosmos-SDK chain.
 func GetStatus() (status Status) {
-	resp, err := http.Get("http://localhost:26657/status")
+	resp, err := http.Get("https://rpc.testnet1.test.gravitydex.io/status")
 	if err != nil {
 		fmt.Println("ERROR!", err)
 	}
