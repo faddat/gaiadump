@@ -89,6 +89,7 @@ func main() {
 			GetBlock(i, rh)
 		}
 
+		// this is a rudimentary way of checking for new blocks and should likely be improved.
 		time.Sleep(5 * time.Second)
 	}
 
