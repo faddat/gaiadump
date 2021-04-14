@@ -98,9 +98,10 @@ func main() {
 // GetBlock grabs a block from a cosmos-sdk chain.
 func GetBlock(block int, rh *rejson.Handler) {
 
-	//http://localhost:26657/block?height=5272289
-	//res, err := rh.JSONSet()
-	base := "http://localhost:26657/block?height="
+	// http://localhost:26657/block?height=5272289
+	// res, err := rh.JSONSet()
+	// This should be configured with a flag
+	base := "https://rpc.testnet1.test.gravitydex.io/block?height="
 	fmt.Println(block)
 	requrl := base + string(block)
 
