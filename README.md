@@ -1,6 +1,8 @@
 # sdkeater
 
-This will get every block of any comos sdk blockchain, and store JSON returns to [ReJSON](https://github.com/RedisJSON/RedisJSON).
+This will get every block of any comos sdk blockchain, then every transaction, and store JSON returns to [ReJSON](https://github.com/RedisJSON/RedisJSON).
+
+If we can't do that, ecosystem-wide, that's bad.
 
 The comparable approach is tracelistener by [@gsora](https://github.com/gsora).
 
