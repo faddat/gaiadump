@@ -2,16 +2,17 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"github.com/go-redis/redis"
 	"github.com/nitishm/go-rejson"
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 )
 
+// Struct generated here: https://mholt.github.io/json-to-go/ because the clients don't quite do the trick.
 type Status struct {
 	Jsonrpc string `json:"jsonrpc"`
 	ID      int    `json:"id"`
@@ -36,11 +37,11 @@ type Status struct {
 		SyncInfo struct {
 			LatestBlockHash     string    `json:"latest_block_hash"`
 			LatestAppHash       string    `json:"latest_app_hash"`
-			LatestBlockHeight   int       `json:"latest_block_height"`
+			LatestBlockHeight   string    `json:"latest_block_height"`
 			LatestBlockTime     time.Time `json:"latest_block_time"`
 			EarliestBlockHash   string    `json:"earliest_block_hash"`
 			EarliestAppHash     string    `json:"earliest_app_hash"`
-			EarliestBlockHeight int       `json:"earliest_block_height"`
+			EarliestBlockHeight string    `json:"earliest_block_height"`
 			EarliestBlockTime   time.Time `json:"earliest_block_time"`
 			CatchingUp          bool      `json:"catching_up"`
 		} `json:"sync_info"`
@@ -56,7 +57,6 @@ type Status struct {
 }
 
 func main() {
-
 	rh := rejson.NewReJSONHandler()
 	cli := redis.NewClient(&redis.Options{Addr: "localhost:6379"})
 
@@ -71,38 +71,73 @@ func main() {
 	rh.SetGoRedisClient(cli)
 
 	for {
-		resp, err := http.Get("http://localhost:26657/status")
+		status := GetStatus()
+		res, err := rh.JSONSet(status.Result.NodeInfo.Network, ".", status)
 		if err != nil {
-			fmt.Println("ERROR!", err)
+			fmt.Println(err)
 		}
-		defer resp.Body.Close()
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			fmt.Println("ERROR!", err)
-		}
-		var status Status
-		json.Unmarshal(body, &status)
-		first := status.Result.SyncInfo.EarliestBlockHeight
-		last := status.Result.SyncInfo.LatestBlockHeight
-		fmt.Println(last)
-		for i := first; i < last; i++ {
+		fmt.Println("Redis response", res)
+
+		ebs := status.Result.SyncInfo.EarliestBlockHeight
+		lbs := status.Result.SyncInfo.LatestBlockHeight
+
+		eb, err := strconv.Atoi(ebs)
+		lb, err := strconv.Atoi(lbs)
+
+		fmt.Println(eb, "to", lb)
+		for i := eb; i < lb; i++ {
 			GetBlock(i, rh)
 		}
+
 		time.Sleep(5 * time.Second)
 	}
 
 }
 
+// GetBlock grabs a block from a cosmos-sdk chain.
 func GetBlock(block int, rh *rejson.Handler) {
 
 	//http://localhost:26657/block?height=5272289
 	//res, err := rh.JSONSet()
+	base := "http://localhost:26657/block?height="
+	fmt.Println(block)
+	requrl := base + string(block)
 
-	res, err := rh.JSONSet("student", ".", student)
+	fmt.Println("request url", requrl)
+
+	resp, err := http.Get(requrl)
+	if err != nil {
+		fmt.Println("ERROR!", err)
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("ERROR!", err)
+	}
+
+	fmt.Println("body", body)
+	res, err := rh.JSONSet("height", "status", body)
 	if err != nil {
 		fmt.Println(err)
 	}
 
 	fmt.Println(res)
 
+}
+
+// GetStatus() grabs the status from a Cosmos-SDK chain.
+func GetStatus() (status Status) {
+	resp, err := http.Get("http://localhost:26657/status")
+	if err != nil {
+		fmt.Println("ERROR!", err)
+	}
+
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("ERROR!", err)
+	}
+
+	json.Unmarshal(body, &status)
+	return
 }
