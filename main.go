@@ -2,11 +2,11 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 
@@ -59,6 +59,8 @@ type Status struct {
 }
 
 func main() {
+	chainurl := flag.String("c", "http://localhost:26657/", "help message for flag n")
+	flag.Parse()
 	rh := rejson.NewReJSONHandler()
 	cli := redis.NewClient(&redis.Options{Addr: "localhost:6379"})
 
@@ -73,7 +75,7 @@ func main() {
 	rh.SetGoRedisClient(cli)
 
 	for {
-		status := GetStatus()
+		status := GetStatus(*chainurl)
 		res, err := rh.JSONSet(status.Result.NodeInfo.Network, ".", status)
 		if err != nil {
 			fmt.Println(err)
@@ -88,7 +90,7 @@ func main() {
 
 		fmt.Println(eb, "to", lb)
 		for i := eb; i < lb; i++ {
-			GetBlock(i, rh)
+			GetBlock(i, rh, *chainurl)
 		}
 
 		// this is a rudimentary way of checking for new blocks and should likely be improved.
@@ -98,12 +100,12 @@ func main() {
 }
 
 // GetBlock grabs a block from a cosmos-sdk chain.
-func GetBlock(block int, rh *rejson.Handler) {
+func GetBlock(block int, rh *rejson.Handler, chainurl string) {
 
 	// http://localhost:26657/block?height=5272289
 	// res, err := rh.JSONSet()
 	// CHAIN should be like: https://rpc.testnet1.test.gravitydex.io/
-	base := os.Getenv("CHAIN") + "block?height="
+	base := chainurl + "block?height="
 	fmt.Println(block)
 	requrl := base + strconv.Itoa(block)
 
@@ -130,8 +132,8 @@ func GetBlock(block int, rh *rejson.Handler) {
 }
 
 // GetStatus() grabs the status from a Cosmos-SDK chain.
-func GetStatus() (status Status) {
-	resp, err := http.Get(os.Getenv(CHAIN))
+func GetStatus(chainurl string) (status Status) {
+	resp, err := http.Get(chainurl + "status")
 	if err != nil {
 		fmt.Println("ERROR!", err)
 	}
