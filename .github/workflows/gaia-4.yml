@@ -1,0 +1,25 @@
+name: hub-5
+
+on: [push, pull_request]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.16
+
+    - name: Build
+      run: go build -v ./...
+      
+    - name: Run
+      run: |
+        docker run -d -p 6379:6379 --name redis-redisjson redislabs/rejson:latest
+        sudo sysctl vm.overcommit_memory=1
+        ./gaiadump -c https://rpc.cosmos.network/
+
