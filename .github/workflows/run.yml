@@ -1,4 +1,4 @@
-name: running example
+name: hub-5
 
 on: [push, pull_request]
 
