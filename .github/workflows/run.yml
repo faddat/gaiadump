@@ -20,6 +20,6 @@ jobs:
     - name: Run
       run: |
         docker run -d -p 6379:6379 --name redis-redisjson redislabs/rejson:latest
-        sysctl vm.overcommit_memory=1
+        sudo sysctl vm.overcommit_memory=1
         ./gaiadump
 
