@@ -3,13 +3,15 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/go-redis/redis"
-	"github.com/nitishm/go-rejson"
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
+
+	"github.com/go-redis/redis"
+	"github.com/nitishm/go-rejson"
 )
 
 // Struct generated here: https://mholt.github.io/json-to-go/ because the clients don't quite do the trick.
@@ -100,10 +102,10 @@ func GetBlock(block int, rh *rejson.Handler) {
 
 	// http://localhost:26657/block?height=5272289
 	// res, err := rh.JSONSet()
-	// This should be configured with a flag
-	base := "https://rpc.testnet1.test.gravitydex.io/block?height="
+	// CHAIN should be like: https://rpc.testnet1.test.gravitydex.io/
+	base := os.Getenv("CHAIN") + "block?height="
 	fmt.Println(block)
-	requrl := base + string(block)
+	requrl := base + strconv.Itoa(block)
 
 	fmt.Println("request url", requrl)
 
@@ -129,7 +131,7 @@ func GetBlock(block int, rh *rejson.Handler) {
 
 // GetStatus() grabs the status from a Cosmos-SDK chain.
 func GetStatus() (status Status) {
-	resp, err := http.Get("https://rpc.testnet1.test.gravitydex.io/status")
+	resp, err := http.Get(os.Getenv(CHAIN))
 	if err != nil {
 		fmt.Println("ERROR!", err)
 	}
